@@ -20,27 +20,31 @@ func (s *Server) createScorecardHandler(w http.ResponseWriter, r *http.Request) 
 	id, err := s.scorecardManager.Create(input.Player, input.CourseID)
 
 	if err != nil {
-		fmt.Fprintln(w, err)
+		fmt.Errorf("couldn't create a new scorecard, error: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
-
+	// TODO create a json helper
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(id)
 }
 
 func (s *Server) joinScorecardHandler(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		Player string `json:"player"`
-		GameID GameID `json:"gameID"`
-	}
+	var input ScorecardStateUpdate
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
-		fmt.Fprintln(w, err)
+		_ = fmt.Errorf("invalid reqest body, error: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
-	s.scorecardManager.Join(input.GameID, input.Player)
+	err = s.scorecardManager.Join(input.GameID, input.Originator)
+	if err != nil {
+		_ = fmt.Errorf("joining the scorecard failed, error: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode("OK")
 }
 
 func (s *Server) testHandler(w http.ResponseWriter, r *http.Request) {
@@ -52,7 +56,7 @@ func (s *Server) testHandler(w http.ResponseWriter, r *http.Request) {
 
 type ScorecardStateUpdate struct {
 	ScorecardState Score  `json:"scorecardState"`
-	Originator     string `json:"Originator"`
+	Originator     string `json:"originator"`
 	UpdateType     string `json:"updateType"` // player joined/left, score update, game ended
 	GameID         GameID `json:"gameID"`
 }
@@ -64,10 +68,8 @@ func (s *Server) updateScorecardHandler(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
-	fmt.Println("IN update HANDLER", input)
-	//s.scorecardManager.Update(input.GameID, input.ScorecardState)
-	ok := s.scorecardManager.Update(input)
-	if !ok {
+	err = s.scorecardManager.Update(input)
+	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode("Something went wrong!")
@@ -79,5 +81,4 @@ func (s *Server) updateScorecardHandler(w http.ResponseWriter, r *http.Request) 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode("State updated")
 	}
-
 }
