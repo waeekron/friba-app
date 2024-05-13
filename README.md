@@ -11,9 +11,9 @@ Users can:
 ## Technologies
 
 ### Backend
-Simple rest api for one in-memory resource
 - Go
 - server-sent-events
+- sqlite
 
 ### Frontend
 - React
