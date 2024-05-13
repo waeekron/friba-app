@@ -24,7 +24,7 @@
 
 
 ## Project structure
-
+```
 .
 ├── broker.go # server-sent-event logic
 ├── errors.go
@@ -34,7 +34,7 @@
 ├── routes.go 
 ├── scorecard.go # scorecard route handlers
 └── scorecardManager.go # business logic related to scorecards
-
+```
 
 ### TODO
 
