@@ -1,5 +1,5 @@
 # Friba-app - a shareable scorecard application
-
+**Work in progress**
 ## Features
 Users can:
 - create, update and join scorecards
