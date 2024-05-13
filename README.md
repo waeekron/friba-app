@@ -1,8 +1,23 @@
 # Friba-app - a shareable scorecard application
 
-Web application which allows users to create, join and update scorecards.
+## Features
+Users can:
+- create, update and join scorecards
+- receive updates via server-sent-events when scorecard state changes 
 
-Every update to the scorecard state is streamed to connected clients via
-server-sent-events.
 
+
+
+## Technologies
+
+### Backend
+Simple rest api for one in-memory resource
+- Go
+- server-sent-events
+
+### Frontend
+- React
+- Daisy UI, tailwindcss
+- react-router-dom
+- react-query
 
