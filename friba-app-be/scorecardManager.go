@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sync"
@@ -38,7 +39,13 @@ func (s *ScorecardManager) Join(id GameID, player string) error {
 	var err error
 	card, ok := s.scorecards[id]
 	if ok {
-		err = card.addPlayer(player)
+		//err = card.addPlayer(player)
+		err = card.update(ScorecardStateUpdate{
+			Originator:     player,
+			UpdateType:     "player-joined",
+			GameID:         id,
+			ScorecardState: Score{player, make([]int, 0)},
+		})
 	}
 	if err != nil {
 		return err
@@ -87,14 +94,29 @@ func (s *Scorecard) addPlayer(player string) error {
 }
 
 func (s *Scorecard) update(state ScorecardStateUpdate) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	fmt.Printf(", %v", s.Scores)
-	for i, v := range s.Scores {
-		if v.Player == state.ScorecardState.Player {
-			fmt.Println("updating", v.Player, "value", state)
-			//v.Score = score.Score
-			s.Scores[i].Score = state.ScorecardState.Score
-			return nil
+	switch state.UpdateType {
+	case "score-update":
+		for i, v := range s.Scores {
+			if v.Player == state.ScorecardState.Player {
+				fmt.Println("updating", v.Player, "value", state)
+				s.Scores[i].Score = state.ScorecardState.Score
+				notify(state, s.broker)
+				return nil
+			}
 		}
+	case "player-joined":
+		s.Scores = append(s.Scores, Score{state.Originator, make([]int, 18)})
+		notify(state, s.broker)
+		return nil
 	}
+
 	return errors.New(fmt.Sprintf("Scorecard state update failed. State which failed\n %v", state))
+}
+
+func notify(state any, broker *Broker) {
+	j, _ := json.Marshal(state)
+	broker.Notifier <- j
 }

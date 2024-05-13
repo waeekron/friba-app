@@ -27,7 +27,9 @@ func (s *Server) writeJSON(w http.ResponseWriter, status int, data envelope, hea
 }
 
 func (s *Server) readJSON(w http.ResponseWriter, r *http.Request, dst any) error {
+	//TODO: implement requrest size limit
 	// Decode the request body into the target destination.
+	fmt.Println("IN readJSON")
 	err := json.NewDecoder(r.Body).Decode(dst)
 	if err != nil {
 		// If there is an error during decoding, start the triage...
